@@ -10,14 +10,10 @@ st.set_page_config(
 
 st.title("YouTube コメント取得ツール")
 
-st.write("YouTube動画のコメントを取得してCSV保存できます。")
-
-# URL入力
 youtube_url = st.text_input(
     "YouTube動画URLを入力してください"
 )
 
-# 取得件数
 max_comments = st.number_input(
     "取得件数",
     min_value=10,
@@ -27,6 +23,7 @@ max_comments = st.number_input(
 )
 
 def extract_video_id(url):
+
     patterns = [
         r"v=([a-zA-Z0-9_-]{11})",
         r"youtu\.be/([a-zA-Z0-9_-]{11})",
@@ -35,6 +32,7 @@ def extract_video_id(url):
 
     for pattern in patterns:
         match = re.search(pattern, url)
+
         if match:
             return match.group(1)
 
@@ -53,9 +51,11 @@ if st.button("コメント取得"):
         st.stop()
 
     try:
+
         downloader = YoutubeCommentDownloader()
 
         comments = []
+
         count = 0
 
         with st.spinner("コメント取得中..."):
@@ -63,10 +63,10 @@ if st.button("コメント取得"):
             for comment in downloader.get_comments(video_id):
 
                 comments.append({
-                    "author": comment.get("author"),
-                    "comment": comment.get("text"),
-                    "likes": comment.get("votes"),
-                    "time": comment.get("time")
+                    "author": comment.author,
+                    "comment": comment.text,
+                    "likes": comment.votes,
+                    "time": comment.time
                 })
 
                 count += 1
@@ -74,17 +74,15 @@ if st.button("コメント取得"):
                 if count >= max_comments:
                     break
 
-        if len(comments) == 0:
-            st.warning("コメントを取得できませんでした")
-            st.stop()
-
         df = pd.DataFrame(comments)
 
-        st.success(f"{len(df)}件のコメントを取得しました")
+        st.success(f"{len(df)}件取得しました")
 
         st.dataframe(df)
 
-        csv = df.to_csv(index=False).encode("utf-8-sig")
+        csv = df.to_csv(
+            index=False
+        ).encode("utf-8-sig")
 
         st.download_button(
             label="CSVダウンロード",
